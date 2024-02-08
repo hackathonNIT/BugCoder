@@ -3,6 +3,7 @@
 
 build/*
 .env
+config_local.json
 
 ### C ###
 # Prerequisites

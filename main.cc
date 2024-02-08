@@ -7,13 +7,15 @@
 int main()
 {
     // Set HTTP listener address and port
-    drogon::app().addListener("0.0.0.0", 5555);
+    drogon::app().addListener("0.0.0.0", 5050);
     // Load config file
     drogon::app().loadConfigFile("../config.json");
 
     // Load env file
     std::ifstream file("../.env");
     std::map<std::string, std::string> envMap;
+    std::cout << envMap["user"] << std::endl;
+    std::cout << envMap["passwd"] << std::endl;
     if (file.is_open())
     {
         std::string line;
@@ -34,7 +36,8 @@ int main()
     {
         std::cerr << "Failed to open .env file." << std::endl;
     }
-    std::cout << envMap["DB_USERNAME"] << std::endl;
+    std::cout << envMap["user"] << std::endl;
+    std::cout << envMap["passwd"] << std::endl;
     auto &dbClients = drogon::app().getCustomConfig()["db_clients"];
     if (dbClients.isArray() && !dbClients.empty())
     {

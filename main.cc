@@ -12,7 +12,7 @@ int main()
     drogon::app().loadConfigFile("../config.json");
 
     // Load env file
-    std::ifstream file(".env");
+    std::ifstream file("../.env");
     std::map<std::string, std::string> envMap;
     if (file.is_open())
     {
@@ -34,22 +34,26 @@ int main()
     {
         std::cerr << "Failed to open .env file." << std::endl;
     }
-
+    std::cout << envMap["DB_USERNAME"] << std::endl;
     auto &dbClients = drogon::app().getCustomConfig()["db_clients"];
     if (dbClients.isArray() && !dbClients.empty())
     {
-        auto &firstClient = dbClients[0];
-        if (firstClient["user"].isString())
-        {
-            firstClient["user"] = envMap["DB_USERNAME"];
-        }
-        if (firstClient["passwd"].isString())
-        {
-            firstClient["passwd"] = envMap["DB_PASSWORD"];
-        }
+        // auto &firstClient = dbClients[0];
+        // if (firstClient["user"].isString())
+        // {
+        //     firstClient["user"] = envMap["DB_USERNAME"];
+        // }
+        // if (firstClient["passwd"].isString())
+        // {
+        //     firstClient["passwd"] = envMap["DB_PASSWORD"];
+        // }
+        // if (firstClient["dbname"].isString())
+        // {
+        //     firstClient["dbname"] = envMap["DB_NAME"];
+        // }
     }
     // drogon::app().loadConfigFile("../config.yaml");
-    // Run HTTP framework,the method will block in the internal event loop
+    //  Run HTTP framework,the method will block in the internal event loop
     drogon::app().run();
     return 0;
 }

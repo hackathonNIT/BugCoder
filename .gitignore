@@ -2,6 +2,8 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij+all,visualstudio,visualstudiocode,cmake,c,c++
 
 build/*
+.env
+config_local.json
 
 ### C ###
 # Prerequisites

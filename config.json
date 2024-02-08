@@ -35,7 +35,7 @@
                 //["MinProtocol", "TLSv1.3"]
             ]
         }
-    ],
+    ],*/
     "db_clients": [
         {
             //name: Name of the client,'default' by default
@@ -49,7 +49,7 @@
             //port: Server port, 5432 by default
             "port": 5432,
             //dbname: Database name
-            "dbname": "test",
+            "dbname": "bugcoder",
             //user: 'postgres' by default
             "user": "",
             //passwd: '' by default
@@ -70,7 +70,7 @@
             // the wiki for more details.
             "auto_batch": false
         }
-    ],
+    ],/*
     "redis_clients": [
         {
             //name: Name of the client,'default' by default

@@ -84,28 +84,19 @@ void User::handleLogin(
 
   std::unordered_map<std::string, std::string> params;
 
-  // '&' を区切り文字として、キーと値を分解する
   std::istringstream ss(body.data());
   std::string keyValue;
   while (std::getline(ss, keyValue, '&'))
   {
-    // '=' を区切り文字として、キーと値を分解する
     size_t pos = keyValue.find('=');
     if (pos != std::string::npos)
     {
       std::string key = keyValue.substr(0, pos);
       std::string value = keyValue.substr(pos + 1);
-      // URL デコード
       key = drogon::utils::urlDecode(key);
       value = drogon::utils::urlDecode(value);
       params[key] = value;
     }
-  }
-
-  // パラメータの内容を出力
-  for (const auto &param : params)
-  {
-    std::cout << "Key: " << param.first << ", Value: " << param.second << std::endl;
   }
 
   auto client = app().getDbClient();
@@ -113,7 +104,7 @@ void User::handleLogin(
   auto f = client->execSqlAsyncFuture("SELECT * FROM users WHERE user_name = \'" + params["user_name"] + "\' AND password = \'" + params["password"] + "\'");
   try
   {
-    auto result = f.get(); // Block until we get the result or catch the exception;
+    auto result = f.get();
     std::cout << result.size() << " rows selected!" << std::endl;
     if (result.size() == 0)
     {

@@ -19,6 +19,7 @@ namespace api
 
       METHOD_ADD(User::getAllUsers, "", Get);
       METHOD_ADD(User::getUserById, "/{1}", Get);
+      METHOD_ADD(User::handleLogin, "/login", Post);
       METHOD_LIST_END
       // your declaration of processing function maybe like this:
       // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);
@@ -27,6 +28,8 @@ namespace api
       void getAllUsers(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
 
       void getUserById(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback, std::string id) const;
+
+      void handleLogin(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };
   }
 }

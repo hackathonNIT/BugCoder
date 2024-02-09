@@ -18,6 +18,8 @@ namespace api
       // ADD_METHOD_TO(Code::your_method_name, "/absolute/path/{1}/{2}/list", Get); // path is /absolute/path/{arg1}/{arg2}/list
       METHOD_ADD(Code::getAllCodes, "", Get);
       METHOD_ADD(Code::getCodeById, "/{1}", Get);
+
+      METHOD_ADD(Code::submitCode, "/submit", Post);
       METHOD_LIST_END
       // your declaration of processing function maybe like this:
       // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);
@@ -26,6 +28,8 @@ namespace api
       void getAllCodes(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
 
       void getCodeById(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback, std::string id) const;
+
+      void submitCode(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };
   }
 }

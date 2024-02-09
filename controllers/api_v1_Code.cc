@@ -1,4 +1,6 @@
 #include "api_v1_Code.h"
+#include "../utils/utils.h"
+#include <sys/wait.h>
 
 using namespace api::v1;
 
@@ -110,6 +112,66 @@ void Code::getCodeById(
   {
     std::cerr << "error" << std::endl;
   }
+
+  auto response = HttpResponse::newHttpJsonResponse(jsonData);
+  callback(response);
+  callback(response);
+  callback(response);
+}
+
+void Code::submitCode(
+    const HttpRequestPtr &req,
+    std::function<void(const HttpResponsePtr &)> &&callback) const
+{
+  std::unordered_map<std::string, std::string> params = getPostParams(req);
+  Json::Value jsonData;
+  const char *source_code = R"(
+        #include <iostream>
+        int main() {
+            // コンパイルエラーを引き起こす行
+            //invalid_code;
+            return 0;
+        }
+    )";
+
+  // コンパイル(ここら辺要修正)
+  const char *compiler_cmd = "g++ -x c++ -o my_program -";
+  const char *code = params["code"].c_str();
+
+  FILE *pipe = popen(compiler_cmd, "w");
+  if (!pipe)
+  {
+    std::cerr << "popen failed\n";
+    return;
+  }
+
+  // ソースコードを書き込む
+  // fwrite(params["code"].c_str(), sizeof(std::string), params["code"].size(), pipe);
+  fwrite(code, sizeof(char), strlen(code), pipe);
+
+  // fwrite(source_code, sizeof(char), strlen(source_code), pipe);
+  int status = pclose(pipe);
+
+  if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+  {
+    std::cerr << "Compilation failed\n";
+    char buffer[128];
+    while (fgets(buffer, sizeof(buffer), stderr) != NULL)
+    {
+      std::cerr << buffer;
+    }
+    jsonData["status"] = "CE";
+  }
+  else
+  {
+    std::cout << "Compilation successful\n";
+    jsonData["status"] = "AC";
+  }
+
+  // std::cout << params["code"].c_str() << std::endl;
+  // std::cout << params["code"] << std::endl;
+
+  // 実行
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);

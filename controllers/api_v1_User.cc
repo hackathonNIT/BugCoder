@@ -1,5 +1,7 @@
 #include "api_v1_User.h"
 
+#include "../utils/utils.h"
+
 using namespace api::v1;
 
 // Add definition of your processing function here
@@ -80,25 +82,7 @@ void User::handleLogin(
     const HttpRequestPtr &req,
     std::function<void(const HttpResponsePtr &)> &&callback) const
 {
-  auto body = req->body();
-
-  std::unordered_map<std::string, std::string> params;
-
-  std::istringstream ss(body.data());
-  std::string keyValue;
-  while (std::getline(ss, keyValue, '&'))
-  {
-    size_t pos = keyValue.find('=');
-    if (pos != std::string::npos)
-    {
-      std::string key = keyValue.substr(0, pos);
-      std::string value = keyValue.substr(pos + 1);
-      key = drogon::utils::urlDecode(key);
-      value = drogon::utils::urlDecode(value);
-      params[key] = value;
-    }
-  }
-
+  std::unordered_map<std::string, std::string> params = getPostParams(req);
   auto client = app().getDbClient();
   Json::Value jsonData;
   auto f = client->execSqlAsyncFuture("SELECT * FROM users WHERE user_name = \'" + params["user_name"] + "\' AND password = \'" + params["password"] + "\'");

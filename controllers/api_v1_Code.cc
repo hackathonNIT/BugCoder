@@ -93,15 +93,24 @@ void Code::getCodeById(
     std::function<void(const HttpResponsePtr &)> &&callback,
     std::string id) const
 {
-  LOG_DEBUG << "Code " << id << " get his information";
+  auto client = app().getDbClient();
+  Json::Value jsonData;
+  auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE code_id = " + id);
+  try
+  {
+    auto result = f.get(); // Block until we get the result or catch the exception;
+    std::cout << result.size() << " rows selected!" << std::endl;
 
-  Json::Value ret;
+    for (const auto &field : result[0])
+    {
+      jsonData[field.name()] = field.as<std::string>();
+    }
+  }
+  catch (...)
+  {
+    std::cerr << "error" << std::endl;
+  }
 
-  ret["result"] = "ok";
-  ret["code"] = "print(\"hello\")";
-  ret["code_id"] = id;
-  ret["user_name"] = "user_name";
-
-  auto resp = HttpResponse::newHttpJsonResponse(ret);
-  callback(resp);
+  auto response = HttpResponse::newHttpJsonResponse(jsonData);
+  callback(response);
 }

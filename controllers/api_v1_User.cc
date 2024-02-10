@@ -139,3 +139,45 @@ void User::handleLogin(
   resp->addHeader("Access-Control-Allow-Credentials", "true");
   callback(resp);
 }
+
+void User::handleSignin(
+    const HttpRequestPtr &req,
+    std::function<void(const HttpResponsePtr &)> &&callback) const
+{
+  std::unordered_map<std::string, std::string> params = getPostParams(req);
+  auto client = app().getDbClient();
+  Json::Value jsonData;
+  auto f = client->execSqlAsyncFuture("SELECT * FROM users WHERE user_name = \'" + params["user_name"] + "\'");
+  std::cout << "FAFA" << std::endl;
+  for (auto pair : params)
+  {
+    std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
+  }
+  try
+  {
+    auto result = f.get();
+    std::cout << result.size() << " rows selected!" << std::endl;
+    if (result.size() == 0)
+    {
+      client->execSqlAsyncFuture("INSERT INTO users (user_name, password, introduction) VALUES (\'" + params["user_name"] + "\',\'" + params["password"] + "\',\'hello!\')");
+      jsonData["is_exist"] = false;
+    }
+    else
+    {
+      jsonData["is_exist"] = true;
+    }
+  }
+  catch (...)
+  {
+    std::cerr << "error" << std::endl;
+  }
+
+  auto resp = HttpResponse::newHttpJsonResponse(jsonData);
+  auto &origin = req->getHeader("Origin");
+  resp->addHeader("Access-Control-Allow-Origin", origin);
+  resp->addHeader("Access-Control-Allow-Methods", "OPTIONS,POST");
+  resp->addHeader("Access-Control-Allow-Headers",
+                  "x-requested-with,content-type");
+  resp->addHeader("Access-Control-Allow-Credentials", "true");
+  callback(resp);
+}

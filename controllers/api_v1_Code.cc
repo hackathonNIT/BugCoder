@@ -1,7 +1,7 @@
 #include "api_v1_Code.h"
 #include "../utils/utils.h"
 #include <sys/wait.h>
-
+#include <functional>
 using namespace api::v1;
 
 // Add definition of your processing function here
@@ -118,6 +118,8 @@ void Code::getCodeById(
   callback(response);
   callback(response);
 }
+#include <csignal>
+#include <iostream>
 
 void Code::submitCode(
     const HttpRequestPtr &req,
@@ -125,14 +127,12 @@ void Code::submitCode(
 {
   std::unordered_map<std::string, std::string> params = getPostParams(req);
   Json::Value jsonData;
-  const char *source_code = R"(
-        #include <iostream>
-        int main() {
-            // コンパイルエラーを引き起こす行
-            //invalid_code;
-            return 0;
-        }
-    )";
+  // const char *source_code = R"(
+  //       #include <iostream>
+  //       int main() {
+  //           return 0;
+  //       }
+  //   )";
 
   // コンパイル(ここら辺要修正)
   const char *compiler_cmd = "g++ -x c++ -o my_program -";
@@ -165,13 +165,34 @@ void Code::submitCode(
   else
   {
     std::cout << "Compilation successful\n";
-    jsonData["status"] = "AC";
   }
 
   // std::cout << params["code"].c_str() << std::endl;
   // std::cout << params["code"] << std::endl;
 
   // 実行
+
+  const int TIMEOUT = 5;
+
+  std::string command = "./my_program";
+
+  FILE *fp = popen(command.c_str(), "r");
+  if (!fp)
+  {
+    std::cerr << "Error executing command.\n";
+    return;
+  }
+
+  std::array<char, 128> buffer;
+
+  while (fgets(buffer.data(), buffer.size(), fp) != nullptr)
+  {
+    std::cout << buffer.data();
+  }
+
+  pclose(fp);
+
+  jsonData["status"] = "AC";
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);

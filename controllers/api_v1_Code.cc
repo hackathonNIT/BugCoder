@@ -68,6 +68,29 @@ void Code::getCodeById(
     {
       jsonData[field.name()] = field.as<std::string>();
     }
+
+    auto f2 = client->execSqlAsyncFuture("SELECT * FROM results WHERE code_id = " + id);
+    try
+    {
+      auto result2 = f2.get(); // Block until we get the result or catch the exception;
+      std::cout << result2.size() << " rows selected!" << std::endl;
+
+      Json::Value childrenJson;
+      for (const auto &r : result2)
+      {
+        Json::Value childJson;
+        for (const auto &field2 : r)
+        {
+          childJson[field2.name()] = field2.as<std::string>();
+        }
+        childrenJson.append(childJson);
+      }
+      jsonData["results"] = childrenJson;
+    }
+    catch (...)
+    {
+      std::cerr << "error" << std::endl;
+    }
   }
   catch (...)
   {
@@ -85,6 +108,29 @@ void Code::getCodeById(
       for (const auto &field : r)
       {
         childJson[field.name()] = field.as<std::string>();
+      }
+      std::string sss = childJson["code_id"].asString();
+      auto f2 = client->execSqlAsyncFuture("SELECT * FROM results WHERE code_id = " + sss);
+      try
+      {
+        auto result2 = f2.get(); // Block until we get the result or catch the exception;
+        std::cout << result2.size() << " rows selected!" << std::endl;
+
+        Json::Value childrenJson2;
+        for (const auto &r : result2)
+        {
+          Json::Value childJson;
+          for (const auto &field2 : r)
+          {
+            childJson[field2.name()] = field2.as<std::string>();
+          }
+          childrenJson2.append(childJson);
+        }
+        childJson["results"] = childrenJson2;
+      }
+      catch (...)
+      {
+        std::cerr << "error" << std::endl;
       }
       childrenJson.append(childJson);
     }

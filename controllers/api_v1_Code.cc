@@ -106,6 +106,7 @@ void Code::getCodeById(
   auto client = app().getDbClient();
   Json::Value jsonData;
   auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE code_id = " + id);
+  auto children = client->execSqlAsyncFuture("SELECT * FROM codes WHERE parent_id = " + id);
   try
   {
     auto result = f.get(); // Block until we get the result or catch the exception;
@@ -115,6 +116,27 @@ void Code::getCodeById(
     {
       jsonData[field.name()] = field.as<std::string>();
     }
+  }
+  catch (...)
+  {
+    std::cerr << "error" << std::endl;
+  }
+
+  try
+  {
+    auto result = children.get(); // Block until we get the result or catch the exception;
+    std::cout << result.size() << " rows selected!" << std::endl;
+    Json::Value childrenJson;
+    for (const auto &r : result)
+    {
+      Json::Value childJson;
+      for (const auto &field : result[0])
+      {
+        childJson[field.name()] = field.as<std::string>();
+      }
+      childrenJson.append(childJson);
+    }
+    jsonData["children"] = childrenJson;
   }
   catch (...)
   {

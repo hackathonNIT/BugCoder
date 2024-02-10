@@ -19,7 +19,7 @@ namespace api
 
       METHOD_ADD(User::getAllUsers, "", Get);
       METHOD_ADD(User::getUserById, "/{1}", Get);
-      METHOD_ADD(User::handleLogin, "/login", Post);
+      METHOD_ADD(User::handleLogin, "/login", Post, Options);
       METHOD_LIST_END
       // your declaration of processing function maybe like this:
       // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);

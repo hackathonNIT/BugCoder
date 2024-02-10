@@ -130,7 +130,7 @@ void Code::getCodeById(
     for (const auto &r : result)
     {
       Json::Value childJson;
-      for (const auto &field : result[0])
+      for (const auto &field : r)
       {
         childJson[field.name()] = field.as<std::string>();
       }

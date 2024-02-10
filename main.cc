@@ -11,6 +11,12 @@ int main()
     // Load config file
     drogon::app().loadConfigFile("../config_local.json");
 
+    drogon::app().registerPostHandlingAdvice(
+        [](const drogon::HttpRequestPtr &req, const drogon::HttpResponsePtr &resp)
+        {
+            // LOG_DEBUG << "postHandling1";
+            resp->addHeader("Access-Control-Allow-Origin", "*");
+        });
     // Load env file
     std::ifstream file("../.env");
     std::map<std::string, std::string> envMap;

@@ -20,7 +20,7 @@ void Code::getAllCodes(
 {
   auto client = app().getDbClient();
   Json::Value jsonData;
-  auto f = client->execSqlAsyncFuture("SELECT * FROM codes");
+  auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE parent_id IS NULL");
   try
   {
     auto result = f.get(); // Block until we get the result or catch the exception;

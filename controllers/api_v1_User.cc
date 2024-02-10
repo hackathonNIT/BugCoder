@@ -98,6 +98,11 @@ void User::handleLogin(
   auto client = app().getDbClient();
   Json::Value jsonData;
   auto f = client->execSqlAsyncFuture("SELECT * FROM users WHERE user_name = \'" + params["user_name"] + "\' AND password = \'" + params["password"] + "\'");
+  std::cout << "FAFA" << std::endl;
+  for (auto pair : params)
+  {
+    std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
+  }
   try
   {
     auto result = f.get();

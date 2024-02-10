@@ -1,0 +1,2 @@
+ALTER TABLE codes
+ADD COLUMN lang_id VARCHAR(255);

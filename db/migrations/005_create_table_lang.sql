@@ -1,0 +1,5 @@
+CREATE TABLE lang (
+    lang_id SERIAL PRIMARY KEY,
+    lang_name VARCHAR(50) NOT NULL,
+    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

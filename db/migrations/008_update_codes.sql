@@ -1,0 +1,1 @@
+UPDATE codes SET lang_id = 2;

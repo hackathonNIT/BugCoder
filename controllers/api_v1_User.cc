@@ -42,8 +42,14 @@ void User::getAllUsers(
     std::cerr << "error" << std::endl;
   }
 
-  auto response = HttpResponse::newHttpJsonResponse(jsonData);
-  callback(response);
+  auto resp = HttpResponse::newHttpJsonResponse(jsonData);
+  auto &origin = req->getHeader("Origin");
+  resp->addHeader("Access-Control-Allow-Origin", origin);
+  resp->addHeader("Access-Control-Allow-Methods", "OPTIONS,POST");
+  resp->addHeader("Access-Control-Allow-Headers",
+                  "x-requested-with,content-type");
+  resp->addHeader("Access-Control-Allow-Credentials", "true");
+  callback(resp);
 }
 
 void User::getUserById(
@@ -74,8 +80,14 @@ void User::getUserById(
     std::cerr << "error" << std::endl;
   }
 
-  auto response = HttpResponse::newHttpJsonResponse(jsonData);
-  callback(response);
+  auto resp = HttpResponse::newHttpJsonResponse(jsonData);
+  auto &origin = req->getHeader("Origin");
+  resp->addHeader("Access-Control-Allow-Origin", origin);
+  resp->addHeader("Access-Control-Allow-Methods", "OPTIONS,POST");
+  resp->addHeader("Access-Control-Allow-Headers",
+                  "x-requested-with,content-type");
+  resp->addHeader("Access-Control-Allow-Credentials", "true");
+  callback(resp);
 }
 
 void User::handleLogin(
@@ -113,6 +125,12 @@ void User::handleLogin(
     std::cerr << "error" << std::endl;
   }
 
-  auto response = HttpResponse::newHttpJsonResponse(jsonData);
-  callback(response);
+  auto resp = HttpResponse::newHttpJsonResponse(jsonData);
+  auto &origin = req->getHeader("Origin");
+  resp->addHeader("Access-Control-Allow-Origin", origin);
+  resp->addHeader("Access-Control-Allow-Methods", "OPTIONS,POST");
+  resp->addHeader("Access-Control-Allow-Headers",
+                  "x-requested-with,content-type");
+  resp->addHeader("Access-Control-Allow-Credentials", "true");
+  callback(resp);
 }

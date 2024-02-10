@@ -47,55 +47,6 @@ void Code::getAllCodes(
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);
-  // catch (const DrogonDbException &e)
-  // {
-  //   std::cerr << "error:" << e.what() << std::endl;
-  // }
-
-  // client->execSqlAsync(
-  //     "SELECT * FROM codes",
-  //     [](const drogon::orm::Result &result)
-  //     {
-  //       std::cout << result.size() << " rows selected!" << std::endl;
-  //       int i = 0;
-  //       for (auto row : result)
-  //       {
-  //         std::cout << i++ << ": user name is " << row["user_name"].as<std::string>() << std::endl;
-  //       }
-  //       for (const auto &row : result)
-  //       {
-  //         Json::Value entry;
-  //         for (const auto &field : row)
-  //         {
-  //           entry[field.name()] = field.as<std::string>();
-  //         }
-  //         jsonData.append(entry);
-  //       }
-  //     },
-  //     [](const DrogonDbException &e)
-  //     {
-  //       std::cerr << "error:" << e.base().what() << std::endl;
-  //     },
-  //     "default");
-  // [](const Result &r)
-  // {
-  //   for (const auto &row : r)
-  //   {
-  //     Json::Value entry;
-  //     for (const auto &field : row)
-  //     {
-  //       entry[field.name()] = field.as<std::string>();
-  //     }
-  //     jsonData.append(entry);
-  //   }
-  // },
-  // [](const DrogonDbException &e)
-  // {
-  //   LOG_ERROR << "Database error: " << e.what();
-  //   auto response = HttpResponse::newHttpResponse();
-  //   response->setStatusCode(HttpStatusCode::k500InternalServerError);
-  //   callback(response);
-  // });
 }
 
 void Code::getCodeById(
@@ -107,6 +58,7 @@ void Code::getCodeById(
   Json::Value jsonData;
   auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE code_id = " + id);
   auto children = client->execSqlAsyncFuture("SELECT * FROM codes WHERE parent_id = " + id);
+  auto answer = client->execSqlAsyncFuture("SELECT * FROM answers WHERE code_id = " + id);
   try
   {
     auto result = f.get(); // Block until we get the result or catch the exception;
@@ -142,10 +94,28 @@ void Code::getCodeById(
   {
     std::cerr << "error" << std::endl;
   }
+  try
+  {
+    auto result = answer.get(); // Block until we get the result or catch the exception;
+    std::cout << result.size() << " rows selected!" << std::endl;
+    Json::Value childrenJson;
+    for (const auto &r : result)
+    {
+      Json::Value childJson;
+      for (const auto &field : r)
+      {
+        childJson[field.name()] = field.as<std::string>();
+      }
+      childrenJson.append(childJson);
+    }
+    jsonData["answer"] = childrenJson;
+  }
+  catch (...)
+  {
+    std::cerr << "error" << std::endl;
+  }
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
-  callback(response);
-  callback(response);
   callback(response);
 }
 

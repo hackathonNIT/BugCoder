@@ -183,13 +183,13 @@ void Code::submitCode(
 
   const int timeoutSeconds = 5000;
   jsonData["status"] = "AC";
-
+  int result;
   pid_t pid = fork();
   if (pid == 0)
   {
     // 入力渡すとき、ここいじくる
     // execlp("sh", "sh", "-c", command.c_str(), nullptr);
-    execlp("./my_program", "./my_program", nullptr);
+    result = execlp("./my_program", "./my_program", nullptr);
     exit(EXIT_FAILURE); // If execlp fails
   }
   else if (pid > 0)
@@ -221,7 +221,9 @@ void Code::submitCode(
           timeoutOccurred = true;
           std::cout << "Command timed out after " << timeoutSeconds << " milliseconds." << std::endl;
           jsonData["status"] = "TLE";
-          break;
+          auto response = HttpResponse::newHttpJsonResponse(jsonData);
+          callback(response);
+          return;
         }
         // Sleep 1 millisecond
         usleep(1000);
@@ -242,6 +244,8 @@ void Code::submitCode(
   {
     std::cerr << "Error in fork." << std::endl;
   }
+
+  std::cout << "result:" << result << std::endl;
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);

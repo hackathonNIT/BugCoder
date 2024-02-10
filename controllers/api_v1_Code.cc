@@ -2,6 +2,14 @@
 #include "../utils/utils.h"
 #include <sys/wait.h>
 #include <functional>
+#include <csignal>
+#include <iostream>
+#include <chrono>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
+
 using namespace api::v1;
 
 // Add definition of your processing function here
@@ -118,8 +126,6 @@ void Code::getCodeById(
   callback(response);
   callback(response);
 }
-#include <csignal>
-#include <iostream>
 
 void Code::submitCode(
     const HttpRequestPtr &req,
@@ -149,6 +155,9 @@ void Code::submitCode(
   // fwrite(params["code"].c_str(), sizeof(std::string), params["code"].size(), pipe);
   fwrite(code, sizeof(char), strlen(code), pipe);
 
+  std::cout << params["code"].c_str() << std::endl;
+  std::cout << params["code"] << std::endl;
+
   // fwrite(source_code, sizeof(char), strlen(source_code), pipe);
   int status = pclose(pipe);
 
@@ -161,38 +170,78 @@ void Code::submitCode(
       std::cerr << buffer;
     }
     jsonData["status"] = "CE";
+    auto response = HttpResponse::newHttpJsonResponse(jsonData);
+    callback(response);
+    return;
   }
   else
   {
     std::cout << "Compilation successful\n";
   }
 
-  // std::cout << params["code"].c_str() << std::endl;
-  // std::cout << params["code"] << std::endl;
-
   // 実行
 
-  const int TIMEOUT = 5;
-
-  std::string command = "./my_program";
-
-  FILE *fp = popen(command.c_str(), "r");
-  if (!fp)
-  {
-    std::cerr << "Error executing command.\n";
-    return;
-  }
-
-  std::array<char, 128> buffer;
-
-  while (fgets(buffer.data(), buffer.size(), fp) != nullptr)
-  {
-    std::cout << buffer.data();
-  }
-
-  pclose(fp);
-
+  const int timeoutSeconds = 5000;
   jsonData["status"] = "AC";
+
+  pid_t pid = fork();
+  if (pid == 0)
+  {
+    // 入力渡すとき、ここいじくる
+    // execlp("sh", "sh", "-c", command.c_str(), nullptr);
+    execlp("./my_program", "./my_program", nullptr);
+    exit(EXIT_FAILURE); // If execlp fails
+  }
+  else if (pid > 0)
+  {
+    bool timeoutOccurred = false;
+    auto start = std::chrono::steady_clock::now();
+    while (true)
+    {
+      int status;
+      pid_t result = waitpid(pid, &status, WNOHANG);
+      if (result == pid)
+      {
+        if (WIFEXITED(status))
+        {
+          int exitStatus = WEXITSTATUS(status);
+          std::cout << "Command exited with status: " << exitStatus << std::endl;
+          // Handle output/error processing here if needed
+        }
+        break;
+      }
+      else if (result == 0)
+      { // Child process still running
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        if (duration > timeoutSeconds)
+        {
+          // Timeout
+          kill(pid, SIGKILL);
+          timeoutOccurred = true;
+          std::cout << "Command timed out after " << timeoutSeconds << " milliseconds." << std::endl;
+          jsonData["status"] = "TLE";
+          break;
+        }
+        // Sleep 1 millisecond
+        usleep(1000);
+      }
+      else
+      {
+        std::cerr << "Error in waitpid." << std::endl;
+        break;
+      }
+    }
+    if (!timeoutOccurred)
+    {
+      //
+      waitpid(pid, nullptr, 0);
+    }
+  }
+  else
+  {
+    std::cerr << "Error in fork." << std::endl;
+  }
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);

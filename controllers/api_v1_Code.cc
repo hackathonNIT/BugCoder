@@ -376,3 +376,14 @@ void Code::submitCode(
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);
 }
+
+void Code::submitIssue(
+    const HttpRequestPtr &req,
+    std::function<void(const HttpResponsePtr &)> &&callback) const
+{
+  std::unordered_map<std::string, std::string> params = getPostParams(req);
+  Json::Value jsonData;
+  auto client = app().getDbClient();
+  auto response = HttpResponse::newHttpJsonResponse(jsonData);
+  callback(response);
+}

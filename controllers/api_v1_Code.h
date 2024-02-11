@@ -19,7 +19,8 @@ namespace api
       METHOD_ADD(Code::getAllCodes, "", Get);
       METHOD_ADD(Code::getCodeById, "/{1}", Get);
 
-      METHOD_ADD(Code::submitCode, "/submit", Post);
+      METHOD_ADD(Code::submitCode, "/submit", Post, Options);
+      METHOD_ADD(Code::submitIssue, "/submitissue", Post, Options);
       METHOD_LIST_END
       // your declaration of processing function maybe like this:
       // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);
@@ -30,6 +31,7 @@ namespace api
       void getCodeById(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback, std::string id) const;
 
       void submitCode(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
+      void submitIssue(const drogon::HttpRequestPtr &req, std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };
   }
 }

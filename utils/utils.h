@@ -1,6 +1,10 @@
 #pragma once
 #include <map>
 #include <sys/wait.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <tuple>
 
 inline std::unordered_map<std::string, std::string> getPostParams(const HttpRequestPtr &req)
 {
@@ -29,16 +33,82 @@ inline std::unordered_map<std::string, std::string> getPostParams(const HttpRequ
   return params;
 }
 
+inline bool checkAnswer(std::string a, std::string b)
+{
+  // body type is St17basic_string_viewIcSt11char_traitsIcEE
+
+  for (size_t i = 0; i < a.size();)
+  {
+    if (a[i] == ' ')
+    {
+      a.erase(i, 1);
+    }
+    else if (a[i] == '\n')
+    {
+      a.erase(i, 1);
+    }
+    else
+    {
+      ++i;
+    }
+  }
+  for (size_t i = 0; i < b.size();)
+  {
+    if (b[i] == ' ')
+    {
+      b.erase(i, 1);
+    }
+    else if (b[i] == '\n')
+    {
+      b.erase(i, 1);
+    }
+    else
+    {
+      ++i;
+    }
+  }
+  std::cout << "check:" << a << "," << b << "\n";
+  return a.compare(b) == 0;
+
+  // std::istringstream sa(a);
+  // std::istringstream sb(b);
+  // std::string keyValue;
+  // std::vector<std::string> answer;
+  // while (std::getline(sa, keyValue, ' '))
+  // {
+  //   std::string ss;
+  //   std::istringstream sa2(keyValue);
+  //   while (std::getline(sa2, ss, '\n'))
+  //   {
+  //     answer.push_back(ss);
+  //   }
+  // }
+  // bool ret = true;
+  // int i = 0;
+  // while (std::getline(sb, keyValue, ' '))
+  // {
+  //   std::string ss;
+  //   std::istringstream sa2(keyValue);
+  //   while (std::getline(sa2, ss, '\n'))
+  //   {
+
+  //     if (answer[i + 1].compare(ss) == 0)
+  //     {
+  //     }
+  //     else
+  //     {
+  //       return false;
+  //     }
+  //   }
+  // }
+  // return true;
+}
+
 inline void timeoutHandler(int signal, pid_t pid, FILE *fp)
 {
   // kill(pid, SIGKILL);
   kill(pclose(fp), SIGKILL);
 };
-
-#include <iostream>
-#include <vector>
-#include <string>
-#include <tuple>
 
 inline std::vector<std::pair<int, std::string>> myers(const std::string &text1, const std::string &text2);
 
@@ -291,4 +361,24 @@ inline Json::Value calculateDiff(std::string text1, std::string text2)
 
   Json::Value ret;
   return ret;
+}
+
+inline std::string generateRandomString(int length)
+{
+  const char charset[] =
+      "abcdefghijklmnopqrstuvwxyz"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "0123456789";
+
+  std::string result;
+  result.reserve(length);
+
+  srand(time(nullptr)); // シードを設定
+
+  for (int i = 0; i < length; ++i)
+  {
+    result += charset[rand() % (sizeof(charset) - 1)];
+  }
+
+  return result;
 }

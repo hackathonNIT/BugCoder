@@ -171,6 +171,49 @@ void Code::submitCode(
 {
   std::unordered_map<std::string, std::string> params = getPostParams(req);
   Json::Value jsonData;
+  auto client = app().getDbClient();
+
+  // char *input[10];
+  std::vector<std::string> input;
+  std::vector<std::string> answer;
+  std::string filename = generateRandomString(12);
+  std::string input_str = "./" + filename;
+  // input[0] = const_cast<char *>(input_str.c_str());
+  input.push_back(input_str);
+  auto f = client->execSqlAsyncFuture("SELECT * FROM answers WHERE code_id = " + params["code_id"]);
+  int answer_cnt;
+  std::vector<Json::Value> dattta;
+  try
+  {
+    auto result = f.get(); // Block until we get the result or catch the exception;
+    std::cout << result.size() << " rows selected!" << std::endl;
+    int i = 0;
+    answer_cnt = result.size();
+    // for (auto row : result)
+    // {
+    //   std::cout << i++ << ": user name is " << row["user_name"].as<std::string>() << std::endl;
+    // }
+    for (const auto &row : result)
+    {
+      Json::Value entry;
+      for (const auto &field : row)
+      {
+        entry[field.name()] = field.as<std::string>();
+      }
+      dattta.push_back(entry);
+      answer.push_back(entry["outdata"].asString());
+      i++;
+      input.push_back(entry["indata"].asString());
+      std::cout << "an;" << answer[i - 1] << "\n";
+    }
+    // input[i + 1] = nullptr;
+  }
+
+  catch (...)
+  {
+    std::cerr << "error" << std::endl;
+  }
+
   // const char *source_code = R"(
   //       #include <iostream>
   //       int main() {
@@ -179,7 +222,8 @@ void Code::submitCode(
   //   )";
 
   // コンパイル(ここら辺要修正)
-  const char *compiler_cmd = "g++ -x c++ -o my_program -";
+  std::string cmd_str = "g++ -x c++ -o " + filename + " -";
+  const char *compiler_cmd = cmd_str.c_str();
   const char *code = params["code"].c_str();
 
   FILE *pipe = popen(compiler_cmd, "w");
@@ -207,7 +251,7 @@ void Code::submitCode(
     {
       std::cerr << buffer;
     }
-    jsonData["status"] = "CE";
+    jsonData[0]["status"] = "CE";
     auto response = HttpResponse::newHttpJsonResponse(jsonData);
     callback(response);
     return;
@@ -218,73 +262,116 @@ void Code::submitCode(
   }
 
   // 実行
+  for (int i = 0; i < answer_cnt; i++)
+  {
 
-  const int timeoutSeconds = 5000;
-  jsonData["status"] = "AC";
-  int result;
-  pid_t pid = fork();
-  if (pid == 0)
-  {
-    // 入力渡すとき、ここいじくる
-    // execlp("sh", "sh", "-c", command.c_str(), nullptr);
-    result = execlp("./my_program", "./my_program", nullptr);
-    exit(EXIT_FAILURE); // If execlp fails
-  }
-  else if (pid > 0)
-  {
-    bool timeoutOccurred = false;
-    auto start = std::chrono::steady_clock::now();
-    while (true)
+    const int timeoutSeconds = 5000;
+    // jsonData["status"] = "AC";
+    int result;
+    pid_t pid = fork();
+    if (pid == 0)
     {
-      int status;
-      pid_t result = waitpid(pid, &status, WNOHANG);
-      if (result == pid)
+      // 入力渡すとき、ここいじくる
+      // execlp("sh", "sh", "-c", command.c_str(), nullptr);
+      result = execlp(input[0].c_str(), input[0].c_str(), input[i + 1].c_str(), nullptr);
+      exit(EXIT_FAILURE); // If execlp fails
+    }
+    else if (pid > 0)
+    {
+      bool timeoutOccurred = false;
+      auto start = std::chrono::steady_clock::now();
+      while (true)
       {
-        if (WIFEXITED(status))
+        int status;
+        pid_t result = waitpid(pid, &status, WNOHANG);
+        if (result == pid)
         {
-          int exitStatus = WEXITSTATUS(status);
-          std::cout << "Command exited with status: " << exitStatus << std::endl;
-          // Handle output/error processing here if needed
+          if (WIFEXITED(status))
+          {
+            int exitStatus = WEXITSTATUS(status);
+            std::cout << "Command exited with status: " << exitStatus << std::endl;
+            // Handle output/error processing here if needed
+          }
+          break;
         }
-        break;
-      }
-      else if (result == 0)
-      { // Child process still running
-        auto end = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        if (duration > timeoutSeconds)
+        else if (result == 0)
+        { // Child process still running
+          auto end = std::chrono::steady_clock::now();
+          auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+          if (duration > timeoutSeconds)
+          {
+            // Timeout
+            kill(pid, SIGKILL);
+            timeoutOccurred = true;
+            std::cout << "Command timed out after " << timeoutSeconds << " milliseconds." << std::endl;
+            jsonData["status"] = "TLE";
+            auto response = HttpResponse::newHttpJsonResponse(jsonData);
+            callback(response);
+            return;
+          }
+          // Sleep 1 millisecond
+          usleep(1000);
+        }
+        else
         {
-          // Timeout
-          kill(pid, SIGKILL);
-          timeoutOccurred = true;
-          std::cout << "Command timed out after " << timeoutSeconds << " milliseconds." << std::endl;
-          jsonData["status"] = "TLE";
-          auto response = HttpResponse::newHttpJsonResponse(jsonData);
-          callback(response);
-          return;
+          std::cerr << "Error in waitpid." << std::endl;
+          break;
         }
-        // Sleep 1 millisecond
-        usleep(1000);
       }
-      else
+      if (!timeoutOccurred)
       {
-        std::cerr << "Error in waitpid." << std::endl;
-        break;
+        //
+        waitpid(pid, nullptr, 0);
       }
     }
-    if (!timeoutOccurred)
+    else
     {
-      //
-      waitpid(pid, nullptr, 0);
+      std::cerr << "Error in fork." << std::endl;
     }
-  }
-  else
-  {
-    std::cerr << "Error in fork." << std::endl;
-  }
 
-  std::cout << "result:" << result << std::endl;
+    std::cout << "result:" << result << std::endl;
 
+    FILE *pp = popen(input_str.c_str(), "r"); // コマンドを実行し、読み取りモードでパイプを開く
+    if (!pp)
+    {
+      std::cerr << "popen() failed!" << std::endl;
+      return;
+    }
+
+    constexpr int buffer_size = 128;
+    char buffer[buffer_size];
+
+    std::string result_p = "";
+
+    // パイプからデータを読み取り、文字列に追加する
+    while (!feof(pp))
+    {
+      if (fgets(buffer, buffer_size, pp) != nullptr)
+      {
+        result_p += buffer;
+      }
+    }
+
+    pclose(pp); // パイプを閉じる
+
+    // コマンドの出力を表示する
+    std::cout << "Command output:\n"
+              << result_p << std::endl;
+
+    // std::string an(answer[i]);
+    bool fans;
+
+    std::cout << "answer:" << answer[i] << "\n";
+    // fans = an.compare(result_p) == 0 ? true : false;
+
+    fans = checkAnswer(result_p, answer[i]);
+    //  Json::Value &addedData = jsonData[i];
+    //  bool fans = true;
+    dattta[i]["status"] = (fans ? "AC" : "WA");
+    jsonData.append(dattta[i]);
+    // addedData["status"] = fans ? "AC" : "WA";
+    //  jsonData[i]["status"] = fans ? "AC" : "WA";
+  }
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);
 }

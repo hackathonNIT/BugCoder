@@ -174,6 +174,23 @@ void Code::submitCode(
   Json::Value jsonData;
   auto client = app().getDbClient();
 
+  size_t pos = params["code"].find("\\n");
+  while (pos != std::string::npos)
+  {
+    params["code"].replace(pos, 2, "\n");
+    pos = params["code"].find("\\n", pos + 1);
+  }
+  pos = params["code"].find("\\\"");
+  while (pos != std::string::npos)
+  {
+    params["code"].erase(pos, 1);
+    pos = params["code"].find("\\\"", pos + 1);
+  }
+  for (auto pair : params)
+  {
+    std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
+  }
+
   // char *input[10];
   std::vector<std::string> input;
   std::vector<std::string> answer;
@@ -384,6 +401,9 @@ void Code::submitIssue(
   std::unordered_map<std::string, std::string> params = getPostParams(req);
   Json::Value jsonData;
   auto client = app().getDbClient();
+
+  auto f = client->execSqlAsyncFuture("INSERT INTO codes VALUES () code_id = " + params["code_id"]);
+
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);
 }

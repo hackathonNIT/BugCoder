@@ -402,7 +402,74 @@ void Code::submitIssue(
   Json::Value jsonData;
   auto client = app().getDbClient();
 
-  auto f = client->execSqlAsyncFuture("INSERT INTO codes VALUES () code_id = " + params["code_id"]);
+  // auto f = client->execSqlAsyncFuture("INSERT INTO results (user_id, code_id,answer_id,result) VALUES (1, 1, 1,'CE') RETURNING result_id");
+
+  // // std::cout << f << std::endl;
+  // const auto &result2 = f.get();
+  // try
+  // {
+  //   std::string iid;
+  //   for (const auto &r : result2)
+  //   {
+  //     Json::Value childJson;
+  //     for (const auto &field2 : r)
+  //     {
+  //       std::cout << "ffff:" << field2.name() << "," << field2.as<std::string>() << "\n";
+  //       childJson[field2.name()] = field2.as<std::string>();
+  //       if (field2.name().compare("result_id") == 0)
+  //       {
+  //         iid = field2.as<std::string>();
+  //       }
+  //     }
+  //     std::cout << "iddd:" << iid << "\n";
+  //   }
+  // }
+  // catch (...)
+  // {
+  // }
+
+  auto f = client->execSqlAsyncFuture("INSERT INTO codes (user_id, code_data, title, detail, lang_id) VALUES (" + params["user_id"] + ",'" + params["code_data"] + "','" + params["title"] + "','" + params["detail"] + "'," + params["lang_id"] + ") RETURNING code_id");
+  const auto &result2 = f.get();
+  try
+  {
+    std::string iid;
+    for (const auto &r : result2)
+    {
+      Json::Value childJson;
+      for (const auto &field2 : r)
+      {
+        std::cout << "ffff:" << field2.name() << "," << field2.as<std::string>() << "\n";
+        childJson[field2.name()] = field2.as<std::string>();
+        // if (field2.name().compare("code_id") == 0)
+        // {
+        client->execSqlAsyncFuture("INSERT INTO answers (user_id, code_id, indata,outdata) VALUES(" + params["user_id"] + "," + field2.as<std::string>() + ",'" + params["indata"] + "','" + params["outdata"] + "')");
+      }
+      std::cout << "iddd:" << iid << "\n";
+    }
+  }
+  catch (...)
+  {
+  }
+  // auto f2 =client->execSqlAsyncFuture("SELECT * FROM codes WHERE ");
+
+  //              .then([client, params](const auto &userResult)
+  //                    {
+  //   if (!userResult.empty())
+  //   {
+  //     // userテーブルに挿入されたユーザーのIDを取得
+  //     const auto &userRow = userResult.front();
+  //     int userId = userRow["id"].as<int>();
+
+  //     // codeテーブルにコードを挿入し、userIdを使用して関連付ける
+  //     return client->execSqlAsyncFuture("INSERT INTO code (user_id, code_text) VALUES ($1, $2) RETURNING id", userId, codeText);
+  //   }
+  //   else
+  //   {
+  //     std::cout << "Failed to insert user" << std::endl;
+  //     return drogon::Future<drogon::orm::Result>();
+  //   } });
+
+  // auto f2 = client->execSqlAsyncFuture("INSERT INTO codes (user_id, code_id, indata,outdata) VALUES";
 
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);

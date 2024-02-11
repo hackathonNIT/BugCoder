@@ -56,8 +56,9 @@ void Code::getCodeById(
 {
   auto client = app().getDbClient();
   Json::Value jsonData;
-  auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE code_id = " + id);
-  auto children = client->execSqlAsyncFuture("SELECT * FROM codes WHERE parent_id = " + id);
+  auto f = client->execSqlAsyncFuture("SELECT codes.*, users.user_name FROM codes JOIN users ON codes.user_id = users.user_id WHERE code_id = " + id);
+  // auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE code_id = " + id);
+  auto children = client->execSqlAsyncFuture("SELECT codes.*, users.user_name FROM codes JOIN users ON codes.user_id = users.user_id WHERE parent_id = " + id);
   auto answer = client->execSqlAsyncFuture("SELECT * FROM answers WHERE code_id = " + id);
   try
   {

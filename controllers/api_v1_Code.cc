@@ -20,7 +20,7 @@ void Code::getAllCodes(
 {
   auto client = app().getDbClient();
   Json::Value jsonData;
-  auto f = client->execSqlAsyncFuture("SELECT * FROM codes WHERE parent_id IS NULL");
+  auto f = client->execSqlAsyncFuture("SELECT codes.*, users.user_name FROM codes JOIN users ON codes.user_id = users.user_id WHERE codes.parent_id IS NULL");
   try
   {
     auto result = f.get(); // Block until we get the result or catch the exception;

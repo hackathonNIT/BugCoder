@@ -538,6 +538,40 @@ inline Json::Value calculateDiff(std::string text1, std::string text2)
       }
     }
   }
+
+  if ((difff || addf) && samef)
+  {
+    Json::Value x;
+    x["code"] = diffstr;
+    x["status"] = -1;
+    Json::Value y;
+    y["code"] = addstr;
+    y["status"] = 1;
+    ret.append(x);
+    ret.append(y);
+  }
+  else if (samef)
+  {
+    Json::Value y;
+    y["code"] = addstr;
+    y["status"] = 0;
+    ret.append(y);
+  }
+  else if (addf)
+  {
+    Json::Value y;
+    y["code"] = addstr;
+    y["status"] = 1;
+    ret.append(y);
+  }
+  else if (difff)
+  {
+    Json::Value y;
+    y["code"] = diffstr;
+    y["status"] = -1;
+    ret.append(y);
+  }
+
   std::cout << std::endl;
   return ret;
 }

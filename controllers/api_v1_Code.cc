@@ -470,12 +470,15 @@ void Code::submitIssue(
         // if (field2.name().compare("code_id") == 0)
         // {
         client->execSqlAsyncFuture("INSERT INTO answers (user_id, code_id, indata,outdata) VALUES(" + params["user_id"] + "," + field2.as<std::string>() + ",'" + params["indata"] + "','" + params["outdata"] + "')");
+        jsonData["code_id"] = field2.as<std::string>();
+        jsonData["submit_flag"] = true;
       }
       std::cout << "iddd:" << iid << "\n";
     }
   }
   catch (...)
   {
+    jsonData["submit_flag"] = false;
   }
   // auto f2 =client->execSqlAsyncFuture("SELECT * FROM codes WHERE ");
 

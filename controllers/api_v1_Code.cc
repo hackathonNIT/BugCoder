@@ -162,6 +162,33 @@ void Code::getCodeById(
     std::cerr << "error" << std::endl;
   }
 
+  if (jsonData["parent_id"].asString().size() != 0)
+  {
+    auto fpar = client->execSqlAsyncFuture("SELECT codes.*, users.user_name FROM codes JOIN users ON codes.user_id = users.user_id WHERE code_id = " + jsonData["parent_id"].asString());
+    std::cout << "FAFFf::" << jsonData["parent_id"].asString() << "\n";
+    try
+    {
+      Json::Value jv;
+      auto resultper = fpar.get(); // Block until we get the result or catch the exception;
+      std::cout << resultper.size() << " rows selected!" << std::endl;
+
+      for (const auto &field : resultper[0])
+      {
+        jv[field.name()] = field.as<std::string>();
+      }
+
+      jsonData["parent_code"] = jv;
+      std::cout << "codee:::::" << jv["code_data"].asString() << ",,,,,\n"
+                << jsonData["code_data"].asString() << "\n";
+      Json::Value jvdiff = calculateDiff(jv["code_data"].asString(), jsonData["code_data"].asString());
+      jsonData["code_diff"] = jvdiff;
+    }
+    catch (...)
+    {
+      std::cerr << "error" << std::endl;
+    }
+  }
+
   auto response = HttpResponse::newHttpJsonResponse(jsonData);
   callback(response);
 }

@@ -333,6 +333,31 @@ inline std::tuple<int, std::string, std::vector<std::pair<int, std::string>>> co
 
 inline Json::Value calculateDiff(std::string text1, std::string text2)
 {
+  size_t pos = text1.find("\\n");
+  while (pos != std::string::npos)
+  {
+    text1.replace(pos, 2, "\n");
+    pos = text1.find("\\n", pos + 1);
+  }
+  pos = text1.find("\\\"");
+  while (pos != std::string::npos)
+  {
+    text1.erase(pos, 1);
+    pos = text1.find("\\\"", pos + 1);
+  }
+
+  pos = text2.find("\\n");
+  while (pos != std::string::npos)
+  {
+    text2.replace(pos, 2, "\n");
+    pos = text2.find("\\n", pos + 1);
+  }
+  pos = text2.find("\\\"");
+  while (pos != std::string::npos)
+  {
+    text2.erase(pos, 1);
+    pos = text2.find("\\\"", pos + 1);
+  }
 
   // Compute diff.
   auto result = compute_diff(text1, text2);
@@ -344,22 +369,176 @@ inline Json::Value calculateDiff(std::string text1, std::string text2)
   std::cout << "LCS = " << lcs << std::endl;
   std::cout << "SES = ";
   std::string addstr = "", diffstr = "", samestr = "";
+  bool addf = 0, samef = 0, difff = 0;
+  Json::Value ret;
   for (const auto &pair : ses)
   {
     std::cout << "(" << pair.first << ", " << pair.second << ") ";
+
     if (pair.first == -1)
     {
+
+      for (int i = 0; i < pair.second.size(); i++)
+      {
+        diffstr = 1;
+        diffstr.push_back(pair.second[i]);
+        if (pair.second[i] == '\n')
+        {
+          std::cout << "FFFAAA"
+                    << "\n";
+          if ((difff || addf) && samef)
+          {
+            Json::Value x;
+            x["code"] = diffstr;
+            x["status"] = -1;
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 1;
+            ret.append(x);
+            ret.append(y);
+          }
+          else if (samef)
+          {
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 0;
+            ret.append(y);
+          }
+          else if (addf)
+          {
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 1;
+            ret.append(y);
+          }
+          else if (difff)
+          {
+            Json::Value y;
+            y["code"] = diffstr;
+            y["status"] = -1;
+            ret.append(y);
+          }
+          else
+          {
+          }
+          addf = 0;
+          difff = 0;
+          samef = 0;
+          addstr = "";
+          diffstr = "";
+        }
+      }
     }
     else if (pair.first == 0)
     {
+
+      for (int i = 0; i < pair.second.size(); i++)
+      {
+        samef = 1;
+        addstr.push_back(pair.second[i]);
+        diffstr.push_back(pair.second[i]);
+        if (pair.second[i] == '\n')
+        {
+          std::cout << "FFFAAA"
+                    << "\n";
+          if ((difff || addf) && samef)
+          {
+            Json::Value x;
+            x["code"] = diffstr;
+            x["status"] = -1;
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 1;
+            ret.append(x);
+            ret.append(y);
+          }
+          else if (samef)
+          {
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 0;
+            ret.append(y);
+          }
+          else if (addf)
+          {
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 1;
+            ret.append(y);
+          }
+          else if (difff)
+          {
+            Json::Value y;
+            y["code"] = diffstr;
+            y["status"] = -1;
+            ret.append(y);
+          }
+          else
+          {
+          }
+          addf = 0;
+          difff = 0;
+          samef = 0;
+          addstr = "";
+          diffstr = "";
+        }
+      }
     }
     else
     {
+      for (int i = 0; i < pair.second.size(); i++)
+      {
+        addf = 1;
+        addstr.push_back(pair.second[i]);
+        if (pair.second[i] == '\n')
+        {
+          std::cout << "FFFAAA"
+                    << "\n";
+          if ((difff || addf) && samef)
+          {
+            Json::Value x;
+            x["code"] = diffstr;
+            x["status"] = -1;
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 1;
+            ret.append(x);
+            ret.append(y);
+          }
+          else if (samef)
+          {
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 0;
+            ret.append(y);
+          }
+          else if (addf)
+          {
+            Json::Value y;
+            y["code"] = addstr;
+            y["status"] = 1;
+            ret.append(y);
+          }
+          else if (difff)
+          {
+            Json::Value y;
+            y["code"] = diffstr;
+            y["status"] = -1;
+            ret.append(y);
+          }
+          else
+          {
+          }
+          addf = 0;
+          difff = 0;
+          samef = 0;
+          addstr = "";
+          diffstr = "";
+        }
+      }
     }
   }
   std::cout << std::endl;
-
-  Json::Value ret;
   return ret;
 }
 
